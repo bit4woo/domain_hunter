@@ -384,10 +384,24 @@ public class GUI extends JFrame {
 		table.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
 		TargetPanel.setViewportView(table);
 		
-		TargetSplitPane = new JSplitPane();
+		JSplitPane CenterSplitPane = new JSplitPane();
+		CenterSplitPane.setResizeWeight(0.5);
+		contentPane.add(CenterSplitPane, BorderLayout.CENTER);
+		
+		
+		JSplitPane leftOfCenterSplitPane = new JSplitPane();
+		leftOfCenterSplitPane.setResizeWeight(0.5);
+		CenterSplitPane.setLeftComponent(leftOfCenterSplitPane);
+		
+		
+		JSplitPane rightOfCenterSplitPane = new JSplitPane();//”“∞Î≤ø∑÷
+		rightOfCenterSplitPane.setResizeWeight(0.5);
+		CenterSplitPane.setRightComponent(rightOfCenterSplitPane);
+		
+		JSplitPane TargetSplitPane = new JSplitPane();//1/4
 		TargetSplitPane.setResizeWeight(0.5);
 		TargetSplitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
-		contentPane.add(TargetSplitPane, BorderLayout.WEST);
+		leftOfCenterSplitPane.setLeftComponent(TargetSplitPane);
 		
 		TargetSplitPane.setLeftComponent(TargetPanel);
 		
@@ -497,15 +511,17 @@ public class GUI extends JFrame {
 		
 		
 		textAreaRelatedDomains = new JTextArea();
-		contentPane.add(textAreaRelatedDomains, BorderLayout.CENTER);
-		
-		JSplitPane ResultSplitPane = new JSplitPane();
-
-		contentPane.add(ResultSplitPane, BorderLayout.EAST);
-		
 		textAreaSubdomains = new JTextArea();
 		textAreaSubdomains.setEditable(false);
-		ResultSplitPane.setLeftComponent(textAreaSubdomains);
+		
+		textAreaSimilarDomains = new JTextArea();
+		textAreaSimilarDomains.setEditable(false);
+		textAreaSimilarDomains.setColumns(30);
+		
+		leftOfCenterSplitPane.setRightComponent(textAreaRelatedDomains);
+		rightOfCenterSplitPane.setLeftComponent(textAreaSubdomains);
+		rightOfCenterSplitPane.setRightComponent(textAreaSimilarDomains);
+		
 		textAreaSubdomains.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
@@ -523,13 +539,6 @@ public class GUI extends JFrame {
 			}
 		});
 		textAreaSubdomains.setColumns(30);
-		
-		textAreaSimilarDomains = new JTextArea();
-		textAreaSimilarDomains.setEditable(false);
-		ResultSplitPane.setRightComponent(textAreaSimilarDomains);
-		textAreaSimilarDomains.setColumns(30);
-		
-		
 		
 		///////////////////////////FooterPanel//////////////////
 		
