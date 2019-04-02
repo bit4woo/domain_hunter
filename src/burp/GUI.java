@@ -53,6 +53,8 @@ import com.google.common.io.Files;
 import com.google.common.net.InternetDomainName;
 
 import javax.swing.border.LineBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileFilter;
@@ -149,10 +151,10 @@ public class GUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
                 int result = JOptionPane.showConfirmDialog(null,"Save Current Project?");
                 
-                /*     ÊÇ:   JOptionPane.YES_OPTION
-                *     ·ñ:   JOptionPane.NO_OPTION
-                *     È¡Ïû: JOptionPane.CANCEL_OPTION
-                *     ¹Ø±Õ: JOptionPane.CLOSED_OPTION*/
+                /*     æ˜¯:   JOptionPane.YES_OPTION
+                *     å¦:   JOptionPane.NO_OPTION
+                *     å–æ¶ˆ: JOptionPane.CANCEL_OPTION
+                *     å…³é—­: JOptionPane.CLOSED_OPTION*/
                 if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
                 	return;
                 }else if (result == JOptionPane.YES_OPTION) {
@@ -176,7 +178,7 @@ public class GUI extends JFrame {
 		btnOpen.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser fc=new JFileChooser();
-				JsonFileFilter jsonFilter = new JsonFileFilter(); //excel¹ıÂËÆ÷  
+				JsonFileFilter jsonFilter = new JsonFileFilter(); //excelè¿‡æ»¤å™¨  
 			    fc.addChoosableFileFilter(jsonFilter);
 			    fc.setFileFilter(jsonFilter);
 				fc.setDialogTitle("Chose Domain Hunter Project File");
@@ -253,8 +255,8 @@ public class GUI extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				
 			    SwingWorker<Map, Map> worker = new SwingWorker<Map, Map>() {
-			    	//¿ÉÒÔÔÚÒ»¸öÀàÖĞÊµÏÖÁíÒ»¸öÀà£¬Ö±½ÓÊµÏÖÔ­Ê¼Àà£¬Ã»ÓĞ±äÁ¿´¦ÀíµÄÀ§ÈÅ£»
-			    	//Ö®Ç°µÄÏë·¨ÊÇÏÈµ¥¶ÀÊµÏÖÒ»¸öworkerÀà£¬ÔÚËüÀïÃæ´¦Àí¸÷ÖÖ£¬¾Í¶àÁËÒ»²ãÊµÏÖ£¬È»ºóÔÚÕâÀïµ÷ÓÃ£¬±äÁ¿µ÷ÓÃ»áÊÇÒ»¸ö´óÎÊÌâ¡£
+			    	//å¯ä»¥åœ¨ä¸€ä¸ªç±»ä¸­å®ç°å¦ä¸€ä¸ªç±»ï¼Œç›´æ¥å®ç°åŸå§‹ç±»ï¼Œæ²¡æœ‰å˜é‡å¤„ç†çš„å›°æ‰°ï¼›
+			    	//ä¹‹å‰çš„æƒ³æ³•æ˜¯å…ˆå•ç‹¬å®ç°ä¸€ä¸ªworkerç±»ï¼Œåœ¨å®ƒé‡Œé¢å¤„ç†å„ç§ï¼Œå°±å¤šäº†ä¸€å±‚å®ç°ï¼Œç„¶ååœ¨è¿™é‡Œè°ƒç”¨ï¼Œå˜é‡è°ƒç”¨ä¼šæ˜¯ä¸€ä¸ªå¤§é—®é¢˜ã€‚
 			    	//https://stackoverflow.com/questions/19708646/how-to-update-swing-ui-while-actionlistener-is-in-progress
 			        @Override
 			        protected Map doInBackground() throws Exception {                
@@ -394,7 +396,7 @@ public class GUI extends JFrame {
 		CenterSplitPane.setLeftComponent(leftOfCenterSplitPane);
 		
 		
-		JSplitPane rightOfCenterSplitPane = new JSplitPane();//ÓÒ°ë²¿·Ö
+		JSplitPane rightOfCenterSplitPane = new JSplitPane();//å³åŠéƒ¨åˆ†
 		rightOfCenterSplitPane.setResizeWeight(0.5);
 		CenterSplitPane.setRightComponent(rightOfCenterSplitPane);
 		
@@ -445,7 +447,7 @@ public class GUI extends JFrame {
 				
 				int[] rowindexs = table.getSelectedRows();
 				for (int i=0; i < rowindexs.length; i++){
-					rowindexs[i] = table.convertRowIndexToModel(rowindexs[i]);//×ª»»ÎªModelµÄË÷Òı£¬·ñÔòÅÅĞòºóË÷Òı²»¶ÔÓ¦¡£
+					rowindexs[i] = table.convertRowIndexToModel(rowindexs[i]);//è½¬æ¢ä¸ºModelçš„ç´¢å¼•ï¼Œå¦åˆ™æ’åºåç´¢å¼•ä¸å¯¹åº”ã€‚
 				}
 				Arrays.sort(rowindexs);
 				
@@ -510,17 +512,86 @@ public class GUI extends JFrame {
 		///////////////////////////////textAreas///////////////////////////////////////////////////////
 		
 		
+		JScrollPane ScrollPaneRelatedDomains = new JScrollPane();
+		JScrollPane ScrollPaneSubdomains = new JScrollPane();
+		JScrollPane ScrollPaneSimilarDomains = new JScrollPane();
+		
+		
+		leftOfCenterSplitPane.setRightComponent(ScrollPaneRelatedDomains);
+		rightOfCenterSplitPane.setLeftComponent(ScrollPaneSubdomains);
+		rightOfCenterSplitPane.setRightComponent(ScrollPaneSimilarDomains);
+		
 		textAreaRelatedDomains = new JTextArea();
 		textAreaSubdomains = new JTextArea();
-		textAreaSubdomains.setEditable(false);
-		
 		textAreaSimilarDomains = new JTextArea();
-		textAreaSimilarDomains.setEditable(false);
-		textAreaSimilarDomains.setColumns(30);
 		
-		leftOfCenterSplitPane.setRightComponent(textAreaRelatedDomains);
-		rightOfCenterSplitPane.setLeftComponent(textAreaSubdomains);
-		rightOfCenterSplitPane.setRightComponent(textAreaSimilarDomains);
+		ScrollPaneRelatedDomains.setViewportView(textAreaRelatedDomains);
+		ScrollPaneSubdomains.setViewportView(textAreaSubdomains);
+		ScrollPaneSimilarDomains.setViewportView(textAreaSimilarDomains);
+
+		
+		textAreaRelatedDomains.getDocument().addDocumentListener(new DocumentListener() {
+
+	        @Override
+	        public void removeUpdate(DocumentEvent e) {
+	        	Set<String> domainList = new HashSet<>(Arrays.asList(textAreaRelatedDomains.getText().split(System.lineSeparator())));
+	        	domainResult.setRelatedDomainSet(domainList);
+	        }
+
+	        @Override
+	        public void insertUpdate(DocumentEvent e) {
+	        	Set<String> domainList = new HashSet<>(Arrays.asList(textAreaRelatedDomains.getText().split(System.lineSeparator())));
+	        	domainResult.setRelatedDomainSet(domainList);
+	        }
+
+	        @Override
+	        public void changedUpdate(DocumentEvent arg0) {
+	        	Set<String> domainList = new HashSet<>(Arrays.asList(textAreaRelatedDomains.getText().split(System.lineSeparator())));
+	        	domainResult.setRelatedDomainSet(domainList);
+	        }
+	    });
+		
+		textAreaSubdomains.getDocument().addDocumentListener(new DocumentListener() {
+
+	        @Override
+	        public void removeUpdate(DocumentEvent e) {
+	        	Set<String> domainList = new HashSet<>(Arrays.asList(textAreaSubdomains.getText().split(System.lineSeparator())));
+	        	domainResult.setSubDomainSet(domainList);
+	        }
+
+	        @Override
+	        public void insertUpdate(DocumentEvent e) {
+	        	Set<String> domainList = new HashSet<>(Arrays.asList(textAreaSubdomains.getText().split(System.lineSeparator())));
+	        	domainResult.setSubDomainSet(domainList);
+	        }
+
+	        @Override
+	        public void changedUpdate(DocumentEvent arg0) {
+	        	Set<String> domainList = new HashSet<>(Arrays.asList(textAreaSubdomains.getText().split(System.lineSeparator())));
+	        	domainResult.setSubDomainSet(domainList);
+	        }
+	    });
+		
+		textAreaSimilarDomains.getDocument().addDocumentListener(new DocumentListener() {
+
+	        @Override
+	        public void removeUpdate(DocumentEvent e) {
+	        	Set<String> domainList = new HashSet<>(Arrays.asList(textAreaSimilarDomains.getText().split(System.lineSeparator())));
+	        	domainResult.setSimilarDomainSet(domainList);
+	        }
+
+	        @Override
+	        public void insertUpdate(DocumentEvent e) {
+	        	Set<String> domainList = new HashSet<>(Arrays.asList(textAreaSimilarDomains.getText().split(System.lineSeparator())));
+	        	domainResult.setSimilarDomainSet(domainList);
+	        }
+
+	        @Override
+	        public void changedUpdate(DocumentEvent arg0) {
+	        	Set<String> domainList = new HashSet<>(Arrays.asList(textAreaSimilarDomains.getText().split(System.lineSeparator())));
+	        	domainResult.setSimilarDomainSet(domainList);
+	        }
+	    });
 		
 		textAreaSubdomains.addMouseListener(new MouseAdapter() {
 			@Override
@@ -531,7 +602,7 @@ public class GUI extends JFrame {
 		            @Override
 		            public void mouseClicked(MouseEvent e) {
 		                if (e.getButton() == MouseEvent.BUTTON3) {
-		                    // µ¯³ö²Ëµ¥
+		                    // å¼¹å‡ºèœå•
 		                    jp.show(textAreaSubdomains, e.getX(), e.getY());
 		                }
 		            }
@@ -549,7 +620,7 @@ public class GUI extends JFrame {
 		contentPane.add(FooterPanel, BorderLayout.SOUTH);
 		
 		lblNewLabel_2 = new JLabel(ExtenderName+"    "+github);
-		lblNewLabel_2.setFont(new Font("ËÎÌå", Font.BOLD, 12));
+		lblNewLabel_2.setFont(new Font("å®‹ä½“", Font.BOLD, 12));
 		lblNewLabel_2.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -682,7 +753,7 @@ public class GUI extends JFrame {
 	
 	public void saveDialog() {
 		JFileChooser fc=new JFileChooser();
-		JsonFileFilter jsonFilter = new JsonFileFilter(); //excel¹ıÂËÆ÷  
+		JsonFileFilter jsonFilter = new JsonFileFilter(); //excelè¿‡æ»¤å™¨  
 	    fc.addChoosableFileFilter(jsonFilter);
 	    fc.setFileFilter(jsonFilter);
 		fc.setDialogTitle("Save Domain Hunter file:");
@@ -727,7 +798,7 @@ public class GUI extends JFrame {
 	  
 	    public boolean accept(File file) {  
 	        String name = file.getName();  
-	        return file.isDirectory() || name.toLowerCase().endsWith(".json");  // ½öÏÔÊ¾Ä¿Â¼ºÍjsonÎÄ¼ş
+	        return file.isDirectory() || name.toLowerCase().endsWith(".json");  // ä»…æ˜¾ç¤ºç›®å½•å’Œjsonæ–‡ä»¶
 	    }
 	}
 

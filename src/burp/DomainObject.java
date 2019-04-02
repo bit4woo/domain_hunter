@@ -120,19 +120,19 @@ public class DomainObject {
     
 
     public String fetchRelatedDomains() {
-    	return set2string(relatedDomainSet);
+    	return String.join(System.lineSeparator(), relatedDomainSet);
     }
 	
     public String fetchSimilarDomains() {
-    	return set2string(similarDomainSet);
+    	return String.join(System.lineSeparator(), similarDomainSet);
     }
     
     public String fetchSubDomains() {
-    	return set2string(subDomainSet);
+    	return String.join(System.lineSeparator(), subDomainSet);
     }
     
 	public String fetchRootDomains() {
-		return set2string(rootDomainMap.keySet());
+		return String.join(System.lineSeparator(), rootDomainMap.keySet());
 	}
 	
 	
@@ -218,7 +218,8 @@ public class DomainObject {
 		}
 		
 		for (String keyword:fetchKeywordSet()) {
-			if (!keyword.equals("") && domain.contains(keyword)){
+			if (!keyword.equals("") && domain.contains(keyword)
+					&& InternetDomainName.from(domain).hasPublicSuffix()){//是否是以公开的 .com .cn等结尾的域名。//如果是以比如local结尾的域名，就不会被认可
 				return DomainObject.SIMILAR_DOMAIN;
 			}
 		}
@@ -228,19 +229,6 @@ public class DomainObject {
 		}
 		return DomainObject.USELESS;
 	}
-	
-	
-	public static String set2string(Set<?> set){
-	    Iterator iter = set.iterator();
-	    StringBuilder result = new StringBuilder();
-	    while(iter.hasNext())
-	    {
-	        //System.out.println(iter.next());  	
-	    	result.append(iter.next()).append("\n");
-	    }
-	    return result.toString();
-	}
-	
 	
 	
 	public static void main(String args[]) {
