@@ -67,10 +67,10 @@ import java.awt.event.FocusEvent;
 
 public class GUI extends JFrame {
 	
-    public String ExtenderName = "Domain Hunter v1.3 by bit4";
+    public String ExtenderName = "Domain Hunter v1.4 by bit4woo";
     public String github = "https://github.com/bit4woo/domain_hunter";
     
-    public DomainObject domainResult = new DomainObject("");
+    public static DomainObject domainResult = new DomainObject("");
     
     public PrintWriter stdout;
     public PrintWriter stderr;
@@ -809,6 +809,12 @@ public class GUI extends JFrame {
 	        String name = file.getName();  
 	        return file.isDirectory() || name.toLowerCase().endsWith(".json");  // 仅显示目录和json文件
 	    }
+	}
+
+
+	public static DomainObject getDomainResult() {
+		// TODO Auto-generated method stub
+		return domainResult;
 	}
 
 }

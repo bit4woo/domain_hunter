@@ -1,29 +1,24 @@
 package burp;
 
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.PrintWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import javax.swing.JMenuItem;
 import javax.swing.SwingUtilities;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.Component;
-
-import java.io.PrintWriter;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 
 public class BurpExtender extends GUI implements IBurpExtender, ITab, IExtensionStateListener,IContextMenuFactory{
-	private IBurpExtenderCallbacks callbacks;
+	private static IBurpExtenderCallbacks callbacks;
     private IExtensionHelpers helpers;
     
     
@@ -58,86 +53,11 @@ public class BurpExtender extends GUI implements IBurpExtender, ITab, IExtension
     
     @Override
 	public Map<String, Set<String>> search(Set<String> rootdomains, Set<String> keywords){
-		
-		Set<String> httpsURLs = new HashSet<String>();
-		Set<IHttpService> httpServiceSet = getHttpServiceFromSiteMap();
-	    for (IHttpService httpservice:httpServiceSet){
-	    	
-	    	String shortURL = httpservice.toString();
-	    	String protocol =  httpservice.getProtocol();
-			String Host = httpservice.getHost();
-			
-			//callbacks.printOutput(rootdomains.toString());
-			//callbacks.printOutput(keywords.toString());
-			int type = domainResult.domainType(Host);
-			//callbacks.printOutput(Host+":"+type);
-			if (type == DomainObject.SUB_DOMAIN)
-			{
-				domainResult.subDomainSet.add(Host);
-			}else if (type == DomainObject.SIMILAR_DOMAIN) {
-				domainResult.similarDomainSet.add(Host);
-			}
-			
-			if (type !=DomainObject.USELESS && protocol.equalsIgnoreCase("https")){
-				httpsURLs.add(shortURL);
-			}
-	    }
-			    
-	    stdout.println("sub-domains and similar-domains search finished,starting get related-domains");
-	    //stdout.println(httpsURLs);
-			    
-	    //多线程获取
-	    //Set<Future<Set<String>>> set = new HashSet<Future<Set<String>>>();
-    	Map<String,Future<Set<String>>> urlResultmap = new HashMap<String,Future<Set<String>>>();
-        ExecutorService pool = Executors.newFixedThreadPool(10);
-        
-        for (String url:httpsURLs) {
-          Callable<Set<String>> callable = new ThreadCertInfo(url,keywords);
-          Future<Set<String>> future = pool.submit(callable);
-          //set.add(future);
-          urlResultmap.put(url, future);
-        }
-        
-        Set<String> tmpRelatedDomainSet = new HashSet<String>();
-        for(String url:urlResultmap.keySet()) {
-        	Future<Set<String>> future = urlResultmap.get(url);
-        //for (Future<Set<String>> future : set) {
-          try {
-        	  stdout.println("founded related-domains :"+future.get() +" from "+url);
-        	  if (future.get()!=null) {
-        		  tmpRelatedDomainSet.addAll(future.get());
-        	  }
-		} catch (Exception e) {
-			//e.printStackTrace(stderr);
-			stderr.println(e.getMessage());
-        }
-        }
-        domainResult.relatedDomainSet =tmpRelatedDomainSet;
-        /* 单线程获取方式
-	    Set<String> tmpRelatedDomainSet = new HashSet<String>();
-	    //begin get related domains
-	    for(String url:httpsURLs) {
-	    	try {
-	    		tmpRelatedDomainSet.addAll(CertInfo.getSANs(url));
-			}catch(UnknownHostException e) {
-				stderr.println("UnknownHost "+ url);
-				continue;
-			}catch(ConnectException e) {
-				stderr.println("Connect Failed "+ url);
-				continue;
-			}
-	    	catch (Exception e) {
-				e.printStackTrace(stderr);
-				continue;
-			}
-	    }
-	    */
-        //to save domain result to extensionSetting
-        String content= domainResult.Save();
-        callbacks.saveExtensionSetting("content", content);
-        
-	    return null;
-    }
+		IBurpExtenderCallbacks callbacks = BurpExtender.getCallbacks();
+		IHttpRequestResponse[] messages = callbacks.getSiteMap(null);
+		new ThreadSearhDomain(Arrays.asList(messages)).Do();
+		return null;
+	}
 	
 	@Override
 	public Map<String, Set<String>> crawl (Set<String> rootdomains, Set<String> keywords) {
@@ -308,6 +228,11 @@ public class BurpExtender extends GUI implements IBurpExtender, ITab, IExtension
 	            e1.printStackTrace(stderr);
 	        }
 	    }
+	}
+
+	public static IBurpExtenderCallbacks getCallbacks() {
+		// TODO Auto-generated method stub
+		return callbacks;
 	}
 	
 	

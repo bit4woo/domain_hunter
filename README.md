@@ -2,7 +2,7 @@
 
 **author**
 
-[bit4](https://github.com/bit4woo)
+[bit4woo](https://github.com/bit4woo)
 
 **domain_hunter**
 
@@ -45,6 +45,8 @@ Some times similar domain and related domains give you surprise^_^. that's why I
 2018-10-30: Big Change: try to find sub-domains, similar domains , related domains of an organization(enterprise), not only a domain.
 
 2018-11-01: Add "Add to domain hunter"  menu  in site map tree.
+
+2019-07-06: Use multiple thread to improve search speed. Use regex to find more domain in every response.
 
 **xmind of domain collection**
 
