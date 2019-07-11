@@ -3,4 +3,5 @@
 /bin/
 /target/
 /.settings/
+/.idea/
 .fatjar
