@@ -20,6 +20,8 @@ Some times similar domain and related domains give you surprise^_^. that's why I
 4. you can just switch to the "domain hunter" tab, input the domain that you want to search and click "Search" button.
 5. or you can  run "Crawl" firstly to try to find more sub-domains and similar domains. 
 
+![usage](doc/usage.gif)
+
 **screenshot**
 
 ![domain-hunter-v1.1](doc/domain-hunter-v1.2.png)
