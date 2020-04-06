@@ -4,8 +4,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Set;
-import com.alibaba.fastjson.JSON;
+
 import com.google.common.net.InternetDomainName;
+import com.google.gson.Gson;
 
 public class DomainObject {
 	public String projectName = "";
@@ -107,12 +108,12 @@ public class DomainObject {
 	////////////////ser and deser///////////
 	
 	public String Save() {
-    	return JSON.toJSONString(this);
+    	return new Gson().toJson(this);
     }
     
     
     public  DomainObject Open(String instanceString) {// throws Exception {
-    	return JSON.parseObject(instanceString, DomainObject.class);
+    	return new Gson().fromJson(instanceString, DomainObject.class);
     }
 	
     

@@ -7,10 +7,11 @@
 **domain_hunter**
 
 A Burp Suite extender that try to find *<u>**sub-domains,similar domains and related domains**</u>* of an organization, not only domain.
-
-
-
 Some times similar domain and related domains give you surprise^_^. that's why I care about it.
+
+**video(视频教程)**
+
+https://www.bilibili.com/video/BV1Jt4y1U7YG/
 
 **usage**
 
