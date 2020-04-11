@@ -5,3 +5,4 @@
 /.settings/
 /.idea/
 .fatjar
+.classpath
