@@ -15,9 +15,9 @@ import java.util.Set;
 
 import javax.swing.JMenuItem;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 
-
-public class BurpExtender extends GUI implements IBurpExtender, ITab, IExtensionStateListener,IContextMenuFactory{
+public class BurpExtender extends GUI implements IBurpExtender, ITab, IExtensionStateListener,IContextMenuFactory,IHttpListener{
 	private static IBurpExtenderCallbacks callbacks;
 	private static IExtensionHelpers helpers;
 
@@ -67,6 +67,7 @@ public class BurpExtender extends GUI implements IBurpExtender, ITab, IExtension
 		callbacks.setExtensionName(getFullExtensionName()); //插件名称
 		callbacks.registerExtensionStateListener(this);
 		callbacks.registerContextMenuFactory(this);
+		callbacks.registerHttpListener(this);
 		addMenuTab();
 
 		//recovery save domain results from extensionSetting
@@ -267,6 +268,104 @@ public class BurpExtender extends GUI implements IBurpExtender, ITab, IExtension
 		return callbacks;
 	}
 
+	@Override
+	public void processHttpMessage(int toolFlag, boolean messageIsRequest, IHttpRequestResponse messageInfo) {
+
+		//		Date now = new Date();
+		SwingWorker<Map, Map> worker = new SwingWorker<Map, Map>() {
+			//using SwingWorker to void slow down proxy http response time.
+
+			@Override
+			protected Map doInBackground() throws Exception {
+				findDomainInTraffic(toolFlag,messageIsRequest,messageInfo);
+				return null;
+			}
+			@Override
+			protected void done() {
+			}
+		};
+		worker.execute();
+		//findDomainInTraffic(toolFlag,messageIsRequest,messageInfo);
+		//		Date now1 = new Date();
+		//		stderr.println("takes time to finish find domain: "+(now1.getTime()-now.getTime()));
+
+	}
+
+
+	public void findDomainInTraffic(int toolFlag, boolean messageIsRequest, IHttpRequestResponse messageInfo){
+		boolean dataChanged =false;
+		if (toolFlag == IBurpExtenderCallbacks.TOOL_PROXY) {
+			try {
+				Getter getter = new Getter(helpers);
+				if (messageIsRequest) {
+					IHttpService httpservice = messageInfo.getHttpService();
+					String Host = httpservice.getHost();
+
+					int hostType = GUI.domainResult.domainType(Host);
+					if (hostType == DomainObject.SUB_DOMAIN)
+					{	
+						if (!GUI.domainResult.getSubDomainSet().contains(Host)) {
+							GUI.domainResult.getSubDomainSet().add(Host);
+							stdout.println("new domain found: "+ Host);
+							dataChanged = true;
+						}
+					}else if (hostType == DomainObject.SIMILAR_DOMAIN) {
+						if (!GUI.domainResult.getSimilarDomainSet().contains(Host)) {
+							GUI.domainResult.getSimilarDomainSet().add(Host);
+							dataChanged = true;
+						}
+					}
+				}else {//response
+
+					IHttpService httpservice = messageInfo.getHttpService();
+					String urlString = getter.getURL(messageInfo).getFile();
+
+					String Host = httpservice.getHost();
+
+					int hostType = GUI.domainResult.domainType(Host);
+					if (hostType != DomainObject.USELESS) {//grep domains from response and classify
+						if (urlString.endsWith(".gif") ||urlString.endsWith(".jpg")
+								|| urlString.endsWith(".png") ||urlString.endsWith(".css")||urlString.endsWith(".woff")) {
+
+						}else {
+							dataChanged = classifyDomains(messageInfo);
+						}
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace(stderr);
+			}
+		}
+
+		if (dataChanged) {
+			showToUI(domainResult);
+		}
+	}
+
+	public boolean classifyDomains(IHttpRequestResponse messageinfo) {
+		boolean dataChanged = false;
+		byte[] response = messageinfo.getResponse();
+		if (response != null) {
+			Set<String> domains = DomainProducer.grepDomain(new String(response));
+			for (String domain:domains) {
+				int type = GUI.domainResult.domainType(domain);
+				if (type == DomainObject.SUB_DOMAIN)
+				{
+					if (!GUI.domainResult.getSubDomainSet().contains(domain)) {
+						GUI.domainResult.getSubDomainSet().add(domain);
+						stdout.println("new domain found: "+ domain);
+						dataChanged = true;
+					}
+				}else if (type == DomainObject.SIMILAR_DOMAIN) {
+					if (!GUI.domainResult.getSimilarDomainSet().contains(domain)){
+						GUI.domainResult.getSimilarDomainSet().add(domain);
+						dataChanged = true;
+					}
+				}
+			}
+		}
+		return dataChanged;
+	}
 
 	/*	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
