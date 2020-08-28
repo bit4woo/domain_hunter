@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.bit4woo.burp</groupId>
 	<artifactId>domain_hunter</artifactId>
-	<version>1.4</version>
+	<version>1.5</version>
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 		<plugins>
