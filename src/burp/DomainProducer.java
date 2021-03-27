@@ -53,9 +53,11 @@ public class DomainProducer extends Thread {//Producer do
 	public void run() {
 		while(true){
 			try {
-				if (inputQueue.isEmpty() || stopflag) {
-					//stdout.println("Producer break");
-					break;
+				if (threadNo != 9999) {
+					if (inputQueue.isEmpty() || stopflag) {
+						//stdout.println("Producer break");
+						break;
+					}
 				}
 
 				IHttpRequestResponse messageinfo = inputQueue.take();
