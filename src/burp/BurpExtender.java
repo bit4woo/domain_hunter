@@ -12,10 +12,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.swing.JMenuItem;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 
 public class BurpExtender extends GUI implements IBurpExtender, ITab, IExtensionStateListener,IContextMenuFactory,IHttpListener{
 	private static IBurpExtenderCallbacks callbacks;
@@ -28,6 +29,15 @@ public class BurpExtender extends GUI implements IBurpExtender, ITab, IExtension
 
 	public static PrintWriter stdout;
 	public static PrintWriter stderr;
+
+	//用于流量自动分析线程的输入队列。
+	public static BlockingQueue<IHttpRequestResponse> liveInputQueue = new LinkedBlockingQueue<IHttpRequestResponse>();
+	DomainProducer liveAnalysisTread;
+
+	public static BlockingQueue<IHttpRequestResponse> inputQueue = new LinkedBlockingQueue<IHttpRequestResponse>();//use to store messageInfo
+	public static BlockingQueue<String> subDomainQueue = new LinkedBlockingQueue<String>();
+	public static BlockingQueue<String> similarDomainQueue = new LinkedBlockingQueue<String>();
+	public static BlockingQueue<String> relatedDomainQueue = new LinkedBlockingQueue<String>();
 
 	//name+version+author
 	public static String getFullExtensionName(){
@@ -77,11 +87,27 @@ public class BurpExtender extends GUI implements IBurpExtender, ITab, IExtension
 			showToUI(domainResult);
 		}
 
+		liveAnalysisTread = startLiveAnalysisThread();
+
 	}
 
+	public DomainProducer startLiveAnalysisThread() {
+		DomainProducer liveAnalysisTread = new DomainProducer(liveInputQueue,subDomainQueue,
+				similarDomainQueue,relatedDomainQueue,9999);
+		//9999这个线程会被识别为流量分析线程。流量分析线程不处理证书。
+		liveAnalysisTread.start();
+		return liveAnalysisTread;
+	}
+
+	public void QueueToResult() {
+		GUI.getDomainResult().getSubDomainSet().addAll(BurpExtender.subDomainQueue);
+		GUI.getDomainResult().getSimilarDomainSet().addAll(BurpExtender.similarDomainQueue);
+		GUI.getDomainResult().getRelatedDomainSet().addAll(BurpExtender.relatedDomainQueue);
+	}
+
+	@Override
 	public void extensionUnloaded() {
-		//TODO to cancel SwingWorker in search and crawl function
-		//this.getContentPane().removeAll();
+		QueueToResult();
 	}
 
 	@Override
@@ -150,28 +176,6 @@ public class BurpExtender extends GUI implements IBurpExtender, ITab, IExtension
 		return search(rootdomains,keywords);
 	}
 
-
-	/*	public Map<String, Set<String>> spideralltest (String subdomainof, String domainlike) {
-
-		int i = 0;
-		while (i<=10) {
-			try {
-				callbacks.sendToSpider(new URL("http://www.baidu.com/"));
-				Thread.sleep(1*60*1000);//单位毫秒，60000毫秒=一分钟
-				stdout.println("sleep 1 min");
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			i++;
-			// to reduce memory usage, use isResponseNull() method to adjust whether the item crawled.
-		}
-
-		Map<String, Set<String>> result = new HashMap<String, Set<String>>();
-		return result;
-	}*/
-
-
-
 	/**
 	 * @return IHttpService set to void duplicate IHttpRequestResponse handling
 	 * 
@@ -211,7 +215,7 @@ public class BurpExtender extends GUI implements IBurpExtender, ITab, IExtension
 	//ITab必须实现的两个方法
 	@Override
 	public String getTabCaption() {
-		return ("Domain Hunter");
+		return (ExtensionName);
 	}
 	@Override
 	public Component getUiComponent() {
@@ -264,107 +268,14 @@ public class BurpExtender extends GUI implements IBurpExtender, ITab, IExtension
 	}
 
 	public static IBurpExtenderCallbacks getCallbacks() {
-		// TODO Auto-generated method stub
 		return callbacks;
 	}
 
 	@Override
 	public void processHttpMessage(int toolFlag, boolean messageIsRequest, IHttpRequestResponse messageInfo) {
-
-		//		Date now = new Date();
-		SwingWorker<Map, Map> worker = new SwingWorker<Map, Map>() {
-			//using SwingWorker to void slow down proxy http response time.
-
-			@Override
-			protected Map doInBackground() throws Exception {
-				findDomainInTraffic(toolFlag,messageIsRequest,messageInfo);
-				return null;
-			}
-			@Override
-			protected void done() {
-			}
-		};
-		worker.execute();
-		//findDomainInTraffic(toolFlag,messageIsRequest,messageInfo);
-		//		Date now1 = new Date();
-		//		stderr.println("takes time to finish find domain: "+(now1.getTime()-now.getTime()));
-
-	}
-
-
-	public void findDomainInTraffic(int toolFlag, boolean messageIsRequest, IHttpRequestResponse messageInfo){
-		boolean dataChanged =false;
-		if (toolFlag == IBurpExtenderCallbacks.TOOL_PROXY) {
-			try {
-				Getter getter = new Getter(helpers);
-				if (messageIsRequest) {
-					IHttpService httpservice = messageInfo.getHttpService();
-					String Host = httpservice.getHost();
-
-					int hostType = GUI.domainResult.domainType(Host);
-					if (hostType == DomainObject.SUB_DOMAIN)
-					{	
-						if (!GUI.domainResult.getSubDomainSet().contains(Host)) {
-							GUI.domainResult.getSubDomainSet().add(Host);
-							stdout.println("new domain found: "+ Host);
-							dataChanged = true;
-						}
-					}else if (hostType == DomainObject.SIMILAR_DOMAIN) {
-						if (!GUI.domainResult.getSimilarDomainSet().contains(Host)) {
-							GUI.domainResult.getSimilarDomainSet().add(Host);
-							dataChanged = true;
-						}
-					}
-				}else {//response
-
-					IHttpService httpservice = messageInfo.getHttpService();
-					String urlString = getter.getURL(messageInfo).getFile();
-
-					String Host = httpservice.getHost();
-
-					int hostType = GUI.domainResult.domainType(Host);
-					if (hostType != DomainObject.USELESS) {//grep domains from response and classify
-						if (urlString.endsWith(".gif") ||urlString.endsWith(".jpg")
-								|| urlString.endsWith(".png") ||urlString.endsWith(".css")||urlString.endsWith(".woff")) {
-
-						}else {
-							dataChanged = classifyDomains(messageInfo);
-						}
-					}
-				}
-			} catch (Exception e) {
-				e.printStackTrace(stderr);
-			}
+		if (toolFlag == IBurpExtenderCallbacks.TOOL_PROXY && !messageIsRequest) {
+			liveInputQueue.add(messageInfo);
 		}
-
-		if (dataChanged) {
-			showToUI(domainResult);
-		}
-	}
-
-	public boolean classifyDomains(IHttpRequestResponse messageinfo) {
-		boolean dataChanged = false;
-		byte[] response = messageinfo.getResponse();
-		if (response != null) {
-			Set<String> domains = DomainProducer.grepDomain(new String(response));
-			for (String domain:domains) {
-				int type = GUI.domainResult.domainType(domain);
-				if (type == DomainObject.SUB_DOMAIN)
-				{
-					if (!GUI.domainResult.getSubDomainSet().contains(domain)) {
-						GUI.domainResult.getSubDomainSet().add(domain);
-						stdout.println("new domain found: "+ domain);
-						dataChanged = true;
-					}
-				}else if (type == DomainObject.SIMILAR_DOMAIN) {
-					if (!GUI.domainResult.getSimilarDomainSet().contains(domain)){
-						GUI.domainResult.getSimilarDomainSet().add(domain);
-						dataChanged = true;
-					}
-				}
-			}
-		}
-		return dataChanged;
 	}
 
 	/*	public static void main(String[] args) {
