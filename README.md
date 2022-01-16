@@ -1,8 +1,8 @@
 [![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/)[![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
 
-#更强大的版本请看 [https://github.com/bit4woo/domain_hunter_pro](https://github.com/bit4woo/domain_hunter_pro)  该版本后续可能会较少更新了。
+# #更强大的版本请看 [https://github.com/bit4woo/domain_hunter_pro](https://github.com/bit4woo/domain_hunter_pro)  该版本后续可能会较少更新了。
 
-#A more powerful version, please see [https://github.com/bit4woo/domain_hunter_pro](https://github.com/bit4woo/domain_hunter_pro) , this one perhaps will not be updated.
+# A more powerful version, please see [https://github.com/bit4woo/domain_hunter_pro](https://github.com/bit4woo/domain_hunter_pro) , this one perhaps will not be updated.
 
 **author**
 
